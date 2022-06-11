@@ -110,7 +110,7 @@ namespace StackUI.Tool
             showTarget.anchorMax = new Vector2(0.5f, 0.5f);
             showTarget.anchoredPosition = new Vector2(0, 0);
             showTarget.sizeDelta = new Vector2(42, 42);
-            var icon = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/Script/MVP/CommonSprite/back.png",typeof(Sprite)) as Sprite;
+            var icon = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/StackUI/Back/back.png",typeof(Sprite)) as Sprite;
             ima.sprite = icon ;
             btn.showTarget = ima;
             btn.interval = 0.5f;
