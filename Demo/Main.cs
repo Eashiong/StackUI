@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using StackUI;
 
-namespace Demo
+namespace StackUI.Demo
 {
 
     public class Main : MonoBehaviour

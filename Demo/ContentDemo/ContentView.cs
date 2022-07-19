@@ -1,12 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using StackUI;
 
-namespace Demo
+namespace StackUI.Demo
 {
-    public class SimpleView : View
+    public class ContentView : PageView
     {
+        public GameObject prefab;
+
+        public List<Button> allImages {get;set;} = new List<Button>();
 
         public override void OnShow()
         {
@@ -18,7 +22,6 @@ namespace Demo
             base.OnClose();
             Debug.Log(go.name + "已关闭");
         }
-
 
     }
 }

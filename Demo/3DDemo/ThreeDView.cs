@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using StackUI;
 using UnityEngine;
-namespace Demo
+namespace StackUI.Demo
 {
     public class ThreeDView : PageView
     {
