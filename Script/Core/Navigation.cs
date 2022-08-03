@@ -198,7 +198,13 @@ namespace StackUI
         /// </summary>
         /// <returns></returns>
         public static bool CanPop() => uiLayer.Count > 1;
-
+		/// <summary>
+        /// 当前页面
+        /// </summary>
+        public static IPresenter Current()
+        {
+            return (uiLayer.Peek() as RouteBuilder).Presenter;
+        }
 
         /// <summary>
         /// 在一个页面上叠加显示一个弹窗
