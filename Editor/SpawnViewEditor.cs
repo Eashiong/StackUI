@@ -72,7 +72,7 @@ namespace StackUI.Tool
 
             var scaler = canvas.gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(750,1624);
+            scaler.referenceResolution = new Vector2(1920,1080);
             scaler.matchWidthOrHeight = 1;
             canvas.gameObject.AddComponent<GraphicRaycaster>();
 
@@ -110,7 +110,7 @@ namespace StackUI.Tool
             showTarget.anchorMax = new Vector2(0.5f, 0.5f);
             showTarget.anchoredPosition = new Vector2(0, 0);
             showTarget.sizeDelta = new Vector2(42, 42);
-            var icon = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/StackUI/Back/back.png",typeof(Sprite)) as Sprite;
+            var icon = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/SubLibrary/StackUI/Back/back.png",typeof(Sprite)) as Sprite;
             ima.sprite = icon ;
             btn.showTarget = ima;
             btn.interval = 0.5f;
