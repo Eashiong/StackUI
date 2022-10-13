@@ -18,7 +18,7 @@ namespace StackUI.Demo
             //注册页面后退事件
             //后退的时候 把当前页面关闭。系统会自动把上一次打开的页面打开
             myView.backAction = () => Navigation.Pop(this);
-            var loading = Navigation.ShowWin("LoadingPresenter");
+            Navigation.ShowWin("LoadingPresenter");
             ContentData.GetServerData((serverData) =>
             {
                 for (int i = 0; i < serverData.datas.Count; i++)
@@ -35,7 +35,7 @@ namespace StackUI.Demo
                         Navigation.Push("ThreeDPresenter", info);
                     });
                 }
-                Navigation.HideWin(loading);
+                Navigation.HideWin("LoadingPresenter");
             });
 
 

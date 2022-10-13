@@ -15,9 +15,8 @@ namespace StackUI
     {
         private static Dictionary<string, IRouteBuilder> table = new Dictionary<string, IRouteBuilder>();
         private const object emptyObj = default(object);
-
-
         private static Stack<IRouteBuilder> uiLayer = new Stack<IRouteBuilder>();
+        private static Dictionary<string, IRouteBuilder> winds = new Dictionary<string, IRouteBuilder>();
 
         /// <summary>
         /// 注册页面
@@ -35,7 +34,7 @@ namespace StackUI
         }
 
         /// <summary>
-        /// 把页面加入栈顶，用于打开一个页面
+        /// 打开一个页面
         /// </summary>
         /// <param name="id">页面ID</param>
         /// <param name="arg">页面参数</param>
@@ -55,7 +54,8 @@ namespace StackUI
             cur.Build(arg);
         }
         /// <summary>
-        /// 弹出当前页面并打开新页面
+        /// 与当前页面置换
+        /// 关闭当前页面后，不显示上一页，而是立即打开一个新页面
         /// </summary>
         /// <param name="id">页面ID</param>
         /// <param name="arg">页面参数</param>
@@ -75,7 +75,7 @@ namespace StackUI
             cur.Build(arg);
         }
         /// <summary>
-        /// push一个指定页面，然后将之前的所有的页面移除
+        /// 打开一个页面，然后将之前的所有的页面移除
         /// </summary>
         /// <param name="id">页面ID</param>
         /// <param name="arg">页面参数</param>
@@ -86,10 +86,10 @@ namespace StackUI
 
         }
         /// <summary>
-        ///  push一个指定页面，然后将之前的所有的页面移除，直到符合条件为止
+        ///  打开一个页面，然后将之前的所有的页面移除，直到符合条件为止
         /// </summary>
         /// <param name="id">页面ID</param>
-        /// <param name="until">返回真时，不在移除</param>
+        /// <param name="until">返回真时，不再移除</param>
         /// <param name="arg">页面参数</param>
         public static void PushAndRemoveUntil(string id, System.Func<string, bool> until, object arg = emptyObj)
         {
@@ -97,7 +97,6 @@ namespace StackUI
             {
                 throw new System.Exception("没有注册页面:" + id);
             }
-
             int count = uiLayer.Count;
             for (int i = count - 1; i >= 0; i--)
             {
@@ -121,16 +120,21 @@ namespace StackUI
         }
 
         /// <summary>
-        /// 关闭一个页面
+        /// 关闭一个页面，并显示上一页
         /// </summary>
         /// <param name="p">当前页</param>
         /// <param name="arg">页面参数</param>
         public static void Pop(Presenter p, object arg = emptyObj)
         {
+            if(!CanPop())
+            {
+                Debug.LogError("无法关闭仅存的一个页面");
+                return;
+            }
             var builder = uiLayer.Peek();
             if (!builder.ID.Equals((p as IPresenter).id))
             {
-                Debug.LogError("当前元素不是栈顶元素");
+                Debug.LogError("参数不是栈顶元素");
                 return;
             }
             var old = uiLayer.Pop();
@@ -140,16 +144,21 @@ namespace StackUI
 
         }
         /// <summary>
-        /// 关闭一个pressenter
+        /// 关闭一个页面，并显示上一页
         /// </summary>
         /// <param name="id">当前页</param>
         /// <param name="arg">页面参数</param>
         public static void Pop(string id, object obj = emptyObj)
         {
+            if(!CanPop())
+            {
+                Debug.LogError("无法关闭仅存的一个页面");
+                return;
+            }
             var builder = uiLayer.Peek();
             if (!builder.ID.Equals(id))
             {
-                Debug.LogError("当前元素不是栈顶元素");
+                Debug.LogError("参数不是栈顶元素");
                 return;
             }
             var old = uiLayer.Pop();
@@ -160,7 +169,7 @@ namespace StackUI
         }
 
         /// <summary>
-        /// 清理所有页面记录
+        /// 删除所有页面
         /// </summary>
         public static void Clear()
         {
@@ -172,12 +181,22 @@ namespace StackUI
             uiLayer.Clear();
 
         }
+        /// <summary>
+        /// 持续关闭页面，直到符合条件为止
+        /// </summary>
+        /// <param name="until">判断页面名满足条件</param>
+        /// <param name="arg"></param>
         public static void PopUntil(System.Func<string, bool> until, object arg = emptyObj)
         {
 
             int count = uiLayer.Count;
             for (int i = count - 1; i >= 0; i--)
             {
+                if(!CanPop())
+                {
+                    Debug.LogError("无法关闭仅存的一个页面");
+                    return;
+                }
                 var builder = uiLayer.Peek();
                 bool result = until(builder.ID);
                 if (result)
@@ -198,6 +217,7 @@ namespace StackUI
         /// </summary>
         /// <returns></returns>
         public static bool CanPop() => uiLayer.Count > 1;
+
 		/// <summary>
         /// 当前页面
         /// </summary>
@@ -207,28 +227,42 @@ namespace StackUI
         }
 
         /// <summary>
-        /// 在一个页面上叠加显示一个弹窗
+        /// 叠加显示一个窗口
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
 
-        public static RouteBuilder ShowWin(string id)
+        public static IPresenter ShowWin(string id,object arg = emptyObj)
         {
             if (!table.ContainsKey(id))
             {
                 throw new System.Exception("没有注册页面:" + id);
             }
+
             var builder = table[id];
-            builder.Build(emptyObj);
-            return builder as RouteBuilder;
+            builder.Build(arg);
+            if (!winds.ContainsKey(id))
+                winds.Add(id,builder);
+            return (builder as RouteBuilder).Presenter;
         }
         /// <summary>
-        /// 隐藏弹窗
+        /// 隐藏窗口
         /// </summary>
-        /// <param name="builder"></param>
-        public static void HideWin(RouteBuilder builder)
+        public static void HideWin(IPresenter p)
         {
-            (builder as IRouteBuilder).Close();
+            HideWin(p.id);
+        }
+        /// <summary>
+        /// 隐藏窗口
+        /// </summary>
+        public static void HideWin(string id)
+        {
+            if (winds.ContainsKey(id))
+            {
+                winds[id].Close();
+                winds.Remove(id);
+            }
+                
         }
     }
     public interface IRouteBuilder
