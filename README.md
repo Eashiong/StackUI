@@ -10,9 +10,9 @@
 * 支持弹窗，界面叠加
 * UI生命周期
 * 带返回键的页面模板
-* 一键绑定所有物体到脚本Inspector属性面板
-* 继承部分UI组件（button text image)，一般建议根据自己的业务进行扩展UGUI的组件。
+* 一键绑定所有物体到脚本Inspector属性面板。
 * Hierarchy可根据模板创建物体，统一规范并提升开发效率
+* 你甚至可以不把它当作UI框架，看成功能模块框架，它只是简单的约定了模块的载入/退出方式和生命周期
 
 ## 页面打开与关闭
 
@@ -81,7 +81,7 @@ void Awake()
 
 默认页面关闭不会删除gameobject和资源，只是隐藏，如果希望页面关闭的时候也删除资源 请使用：
 ```Navigation.AddTable<LoadingPresenter>("LoadingPresenter","LoadingWin",false);```
-这样页面关闭的时候才会触发生命周期函数OnDispose
+传入false,这样页面关闭的时候才会触发生命周期函数OnDispose
 
 
 
@@ -107,7 +107,8 @@ private GameObject CustomLoader(string sourceName)
     
 ```
 
-同一套UI代码，你还可以动态的在任意位置使用不同的UI，前提是他们的逻辑应该是相同的，只是皮肤不同而已
+同一套UI代码，使用SetAssetName函数你还可以动态的在任意位置使用不同的UI，前提是他们的逻辑应该是相同的，只是皮肤不同而已
+某些场合你可能需要这个功能，比如横竖屏切换、夜间模式、定时活动/节日模式皮肤
 
 ```
 Navigation.SetAssetName("LoadingPresenter","NewLoadingWin");
@@ -268,9 +269,9 @@ public class Test: MonoBehaviour
 运行场景Demo/Scenes/SampleScene.unity,游戏分辨率尽量设置成竖屏，因为demo中的界面是这么适配的
 
 demo涵盖如下使用场景
-* 无UI完全3D
-* 闪屏画面
-* 菜单UI，并带返回键
+* 页面跳转和生命周期
+* 闪屏画面演示
+* 带返回键的页面
 * 展示3D场景和UI混合
 * loading窗口叠加在其他UI界面上
 * 页面之间传参
