@@ -13,10 +13,9 @@ namespace StackUI.Demo
             //建议ID和类名一致
             Navigation.AddTable<LoginPresenter>("LoginPresenter","LoginView");
             Navigation.AddTable<MainPresenter>("MainPresenter","MainView");
-
+            Navigation.SetAssetName("MainPresenter","MainView");
             //传入ID  打开登录页
             Navigation.Push("LoginPresenter");
-            
         }
 
     }

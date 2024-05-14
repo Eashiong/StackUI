@@ -14,15 +14,27 @@ namespace StackUI
         /// </summary>
         /// <value></value>
         View view { get; set; }
+
+        //资源加载完成时
+        void OnAssetLoaded();
+
         /// <summary>
         /// 初始化
         /// </summary>
         /// <param name="arg">参数</param>
         void OnInit(object arg);
+        
+        //重复初始化
+        void OnReInit(object arg);
+
         /// <summary>
         /// 隐藏
         /// </summary>
         void OnClose();
+
+        void OnDispose();
+
+        bool isActive { get; set; }
     }
     
     public class Presenter:IPresenter
@@ -30,31 +42,33 @@ namespace StackUI
         public Presenter() { }
         private string _id;
         string IPresenter.id { get=>_id;set=>_id = value; }
+        protected string ID { get=> _id;}
 
         public View view { get;set; }
 
-        private bool _enable;
-        /// <summary>
-        /// 当前可见状态
-        /// </summary>
-        /// <value></value>
-        public bool enable { get => _enable;}
-
+        private bool _isActive;
+        bool IPresenter.isActive { get=>_isActive;set=>_isActive = value; }
+        public virtual void OnAssetLoaded()
+        {
+            
+        }
         public virtual void OnInit(object arg)
         {
-            if(!_enable)
-                view.OnShow();
-            else
-                UnityEngine.Debug.LogWarning("重复初始化,id:" + _id);
-            _enable = true;
+            view.OnShow();
+            _isActive = true;
+        }
+        public virtual void OnReInit(object arg)
+        {
         }
         public virtual void OnClose()
         {
-            if(_enable)
-                view.OnClose();
-            else
-                UnityEngine.Debug.LogWarning("重复隐藏,id:" + _id);
-            _enable = false;
+            view.OnClose();
+            _isActive = false;
+        }
+
+        public virtual void OnDispose()
+        {
+            
         }
     }
 }

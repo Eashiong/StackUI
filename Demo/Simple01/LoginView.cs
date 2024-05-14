@@ -12,6 +12,7 @@ namespace StackUI.Demo
         public override void OnInit(object arg)
         {
             base.OnInit(arg);
+            
             myView = view as LoginView;
             myView.loginBtn.AddListener(() => Navigation.Push("MainPresenter", "Hello"));
         }

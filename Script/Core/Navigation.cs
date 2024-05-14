@@ -13,10 +13,10 @@ namespace StackUI
 
     public static class Navigation
     {
-        private static Dictionary<string, IRouteBuilder> table = new Dictionary<string, IRouteBuilder>();
+        private static Dictionary<string, RouteBuilder> table = new Dictionary<string, RouteBuilder>();
         private const object emptyObj = default(object);
-        private static Stack<IRouteBuilder> uiLayer = new Stack<IRouteBuilder>();
-        private static Dictionary<string, IRouteBuilder> winds = new Dictionary<string, IRouteBuilder>();
+        private static Stack<RouteBuilder> uiLayer = new Stack<RouteBuilder>();
+        private static Dictionary<string, RouteBuilder> winds = new Dictionary<string, RouteBuilder>();
 
         /// <summary>
         /// 注册页面
@@ -28,9 +28,8 @@ namespace StackUI
         public static void AddTable<T>(string id,string viewName,bool dontDestroy = true,Func<string, GameObject> loader = null)
         {
             System.Type t = typeof(T);
-            IRouteBuilder builder = new RouteBuilder(t, viewName,loader).SetDontDestroy(dontDestroy) as IRouteBuilder;
-            IRouteBuilder b = builder as IRouteBuilder;
-            table.Add(b.ID, b);
+            RouteBuilder builder = new RouteBuilder(t, viewName,loader).SetDontDestroy(dontDestroy);
+            table.Add(builder.id, builder);
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace StackUI
             {
                 var builder = uiLayer.Peek();
                 builder.Close();
-                bool result = until(builder.ID);
+                bool result = until(builder.id);
                 if (result)
                 {
                     var cur = table[id];
@@ -132,7 +131,7 @@ namespace StackUI
                 return;
             }
             var builder = uiLayer.Peek();
-            if (!builder.ID.Equals((p as IPresenter).id))
+            if (!builder.id.Equals((p as IPresenter).id))
             {
                 Debug.LogError("参数不是栈顶元素");
                 return;
@@ -156,7 +155,7 @@ namespace StackUI
                 return;
             }
             var builder = uiLayer.Peek();
-            if (!builder.ID.Equals(id))
+            if (!builder.id.Equals(id))
             {
                 Debug.LogError("参数不是栈顶元素");
                 return;
@@ -169,7 +168,7 @@ namespace StackUI
         }
 
         /// <summary>
-        /// 删除所有页面
+        /// 删除所有页面和窗口
         /// </summary>
         public static void Clear()
         {
@@ -179,6 +178,12 @@ namespace StackUI
                 top.Close();
             }
             uiLayer.Clear();
+
+            foreach(var win in winds)
+            {
+                win.Value.Close();
+            }
+            winds.Clear();
 
         }
         /// <summary>
@@ -198,7 +203,7 @@ namespace StackUI
                     return;
                 }
                 var builder = uiLayer.Peek();
-                bool result = until(builder.ID);
+                bool result = until(builder.id);
                 if (result)
                 {
                     builder.Build(arg);
@@ -211,7 +216,44 @@ namespace StackUI
             }
             throw new System.Exception("操作失败：条件似乎永远都不会返回真");
         }
-
+        /// <summary>
+        /// 标识页面关闭时候是否删除资源
+        /// </summary>
+        public static void SetDontDestroyAsset(string id,bool dontDestroy)
+        {
+            if(!table.ContainsKey(id))
+            {
+                throw new System.Exception("没有注册页面:" + id);
+            }
+            else
+            {
+                table[id].SetDontDestroy(dontDestroy);
+            }
+        }
+        /// <summary>
+        /// 标识页面关闭时候删除资源
+        /// </summary>
+        public static void SetDontDestroyAsset(IPresenter p,bool dontDestroy)
+        {
+            SetDontDestroyAsset(p.id,dontDestroy);
+        }
+        /// <summary>
+        /// 页面打开时候 指定使用某个资源
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="newName"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void SetAssetName(string id,string newName)
+        {
+            if(!table.ContainsKey(id))
+            {
+                throw new System.Exception("没有注册页面:" + id);
+            }
+            else
+            {
+                table[id].SetNewAssetName(newName);
+            }
+        }
         /// <summary>
         /// 当前页面是否能关闭?
         /// </summary>
@@ -223,7 +265,7 @@ namespace StackUI
         /// </summary>
         public static IPresenter Current()
         {
-            return (uiLayer.Peek() as RouteBuilder).Presenter;
+            return uiLayer.Peek().Presenter;
         }
 
         /// <summary>
@@ -243,50 +285,42 @@ namespace StackUI
             builder.Build(arg);
             if (!winds.ContainsKey(id))
                 winds.Add(id,builder);
-            return (builder as RouteBuilder).Presenter;
+            return builder.Presenter;
         }
         /// <summary>
         /// 隐藏窗口
         /// </summary>
-        public static void HideWin(IPresenter p)
+        public static void HideWin(IPresenter p,bool destroyAsset = false)
         {
-            HideWin(p.id);
+            HideWin(p.id,destroyAsset);
         }
         /// <summary>
         /// 隐藏窗口
         /// </summary>
-        public static void HideWin(string id)
+        public static void HideWin(string id,bool destroyAsset = false)
         {
+            
             if (winds.ContainsKey(id))
             {
-                winds[id].Close();
+                var builder =  winds[id];
+                winds[id].Close(destroyAsset);
                 winds.Remove(id);
             }
-                
         }
-    }
-    public interface IRouteBuilder
-    {
-        /// <summary>
-        /// 创建
-        /// </summary>
-        /// <param name="arg"></param>
-        void Build(object arg);
-        /// <summary>
-        /// 关闭
-        /// </summary>
-        void Close();
-        /// <summary>
-        /// 唯一ID标识
-        /// </summary>
-        /// <value></value>
-        string ID { get; set; }
+        public static bool ExistWin(string id)
+        {
+            return winds.ContainsKey(id);
+        }
+        public static T GetWin<T>(string id) where T:Presenter
+        {
+            return (winds[id] as RouteBuilder).Presenter as T;
+        }
     }
 
     /// <summary>
     /// 页面创建器
     /// </summary>
-    public class RouteBuilder : IRouteBuilder
+    public class RouteBuilder
     {
         /// <summary>
         /// 页面
@@ -298,8 +332,7 @@ namespace StackUI
         //资源名
         private string viewName;
         //唯一ID
-        private string id;
-        string IRouteBuilder.ID { get => id; set => id = value; }
+        public string id;
 
         //已打开?
         private bool IsActive;
@@ -331,8 +364,12 @@ namespace StackUI
             this.dontDestroy = dontDestroy;
             return this;
         }
+        public void SetNewAssetName(string name)
+        {
+            viewName = name;
+        }
 
-        void IRouteBuilder.Build(object arg)
+        public void Build(object arg)
         {
             IsActive = true;
             if (Presenter == null)
@@ -342,21 +379,26 @@ namespace StackUI
                 Presenter.id = id;
                 var go = loader(this.viewName);
                 Presenter.view = go.GetComponent<View>();
+                Presenter.OnAssetLoaded();
             }
-            Presenter.OnInit(arg);
+            if(Presenter.isActive == false)
+                Presenter.OnInit(arg);
+            else
+                Presenter.OnReInit(arg);
 
         }
 
 
-        void IRouteBuilder.Close()
+        public void Close(bool forceDestroy = false)
         {
             if (IsActive)
             {
                 IsActive = false;
                 Presenter.OnClose();
             }
-            if (!dontDestroy)
+            if (forceDestroy || !dontDestroy)
             {
+                Presenter.OnDispose();
                 UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
                 Presenter = null;
             }
