@@ -11,216 +11,163 @@ namespace StackUI.Tool
     public class SpawnViewEditor
     {
 
-        [MenuItem("GameObject/MVP/Simple", false, 0)]
-        static void CreateSimple()
+        [MenuItem("GameObject/StackUI/Simple View", false, 0)]
+        static void CreateSimpleUI()
         {
-            var go = new GameObject("SimpleView");
-            Selection.activeGameObject = go;
-        }
-        [MenuItem("GameObject/MVP/Simple UI", false, 0)]
-        static void CreateSimplePage()
-        {
-            Transform root = new GameObject("SimplePageView").transform;
-            Transform cam = SpawnCamera();
-            cam.SetParent(root, false);
-
-            Transform canvas = SpawnCanvas(cam.GetComponent<Camera>());
-            canvas.SetParent(root, false);
-            Selection.activeTransform = canvas;
-
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UISettingData.CurrentData.simpleUITemplatePath + ".prefab");
+            GameObject go = GameObject.Instantiate(prefab);
+            go.name = prefab.name;
+            Selection.activeTransform = go.transform;
 
         }
-        [MenuItem("GameObject/MVP/Return UI", false, 0)]
+
+        
+        [MenuItem("GameObject/StackUI/Page View", false, 0)]
         static void CreatePage()
         {
-            Transform root = new GameObject("PageView").transform;
-            Transform cam = SpawnCamera();
-            cam.SetParent(root, false);
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UISettingData.CurrentData.pageTemplatePath + ".prefab");
+            GameObject go = GameObject.Instantiate(prefab);
+            go.name = prefab.name;
+            Selection.activeTransform = go.transform;
 
-            Transform canvas = SpawnCanvas(cam.GetComponent<Camera>());
-            canvas.SetParent(root, false);
-
-            SpawnBack(canvas);
-            Selection.activeTransform = canvas;
 
         }
-
-        static Transform SpawnCamera()
+        [MenuItem("GameObject/StackUI/Popup View", false, 0)]
+        static void CreatePopup()
         {
-            Camera cam = new GameObject("Camera").AddComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.Depth;
-            cam.cullingMask = LayerMask.GetMask("UI");
-            cam.orthographic = true;
-            cam.farClipPlane = 100;
-            cam.depth = 1;
-            //cam.allowDynamicResolution = true;
-            return cam.transform;
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UISettingData.CurrentData.popupTemplatePath + ".prefab");
+            GameObject go = GameObject.Instantiate(prefab);
+            go.name = prefab.name;
+            Selection.activeTransform = go.transform;
+
         }
-        static Transform SpawnCanvas(Camera cam)
+        [MenuItem("GameObject/StackUI/Custom View", false, 0)]
+        static void CreateCustom()
         {
-            Canvas canvas = new GameObject("Canvas").AddComponent<Canvas>();
-            if (cam)
-            {
-                canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                canvas.worldCamera = cam;
-            }
-            else
-            {
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            }
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UISettingData.CurrentData.customTemplatePath + ".prefab");
+            GameObject go = GameObject.Instantiate(prefab);
+            go.name = prefab.name;
+            Selection.activeTransform = go.transform;
 
-
-            var scaler = canvas.gameObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(750,1624);
-            scaler.matchWidthOrHeight = 1;
-            canvas.gameObject.AddComponent<GraphicRaycaster>();
-
-            canvas.gameObject.layer = LayerMask.NameToLayer("UI");
-
-
-            return canvas.transform;
-        }
-        static Transform SpawnBack(Transform canvas)
-        {
-            RectTransform back = new GameObject("BackBtn").AddComponent<RectTransform>();
-            back.gameObject.layer = LayerMask.NameToLayer("UI");
-            back.SetParent(canvas, false);
-            var raycasetTarget = back.gameObject.AddComponent<UIRawImage>();
-            raycasetTarget.texture = null;
-            raycasetTarget.color = new Color(1,1,1,0);
-            back.pivot = new Vector2(0, 1);
-            back.anchorMin = new Vector2(0, 1);
-            back.anchorMax = new Vector2(0, 1);
-            back.anchoredPosition = new Vector2(0,-88);
-            back.sizeDelta = new Vector2(200, 88);
-            UIButton btn = back.gameObject.AddComponent<UIButton>();
-            btn.transition = Selectable.Transition.None;
-
-
-
-            RectTransform showTarget = new GameObject("ShowTarget").AddComponent<RectTransform>();
-            showTarget.gameObject.layer = LayerMask.NameToLayer("UI");
-            showTarget.SetParent(back, false);
-            var ima = showTarget.gameObject.AddComponent<UIImage>();
-            ima.sprite = null;
-            ima.raycastTarget = false;
-
-            showTarget.anchorMin = new Vector2(0.5f, 0.5f);
-            showTarget.anchorMax = new Vector2(0.5f, 0.5f);
-            showTarget.anchoredPosition = new Vector2(0, 0);
-            showTarget.sizeDelta = new Vector2(42, 42);
-            var icon = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/StackUI/Back/back.png",typeof(Sprite)) as Sprite;
-            ima.sprite = icon ;
-            btn.showTarget = ima;
-            btn.interval = 0.5f;
-
-
-
-
-
-            return back.transform;
         }
 
-        [MenuItem("GameObject/UI/Image")]
+        
+        [MenuItem("GameObject/StackUI/Image")]
         static void CreatImage()
         {
-            GameObject go = new GameObject("UIImage", typeof(UIImage));
-            go.GetComponent<UIImage>().raycastTarget = false;
+           
             if (Selection.activeTransform && Selection.activeTransform.GetComponentInParent<Canvas>())
+            {
+                GameObject go = new GameObject("Image", typeof(Image));
+                go.GetComponent<Image>().raycastTarget = false;
                 go.transform.SetParent(Selection.activeTransform, false);
+                go.layer = LayerMask.NameToLayer("UI");
+                Selection.activeGameObject = go;
+
+            }
             else
-                go.transform.SetParent(CheckCanvas(), false);
-            go.layer = LayerMask.NameToLayer("UI");
-            Selection.activeGameObject = go;
+            {
+                Debug.Log("需要在画布钟创建!");
+            }
+                
+           
         }
-        [MenuItem("GameObject/UI/Text")]
+        [MenuItem("GameObject/StackUI/Text")]
         static void CreatText()
         {
-            GameObject go = new GameObject("UIText", typeof(UIText));
-            go.GetComponent<UIText>().raycastTarget = false;
-            go.GetComponent<UIText>().supportRichText = false;
             if (Selection.activeTransform && Selection.activeTransform.GetComponentInParent<Canvas>())
+            {
+                GameObject go = new GameObject("Text", typeof(Text));
+                go.GetComponent<Text>().raycastTarget = false;
+                go.GetComponent<Text>().supportRichText = false;
                 go.transform.SetParent(Selection.activeTransform, false);
+                go.layer = LayerMask.NameToLayer("UI");
+                Selection.activeGameObject = go;
+            }
             else
-                go.transform.SetParent(CheckCanvas(), false);
-            go.layer = LayerMask.NameToLayer("UI");
-            Selection.activeGameObject = go;
+            {
+                Debug.Log("需要在画布钟创建!");
+            }
         }
-        [MenuItem("GameObject/UI/Raw Image")]
-        static void CreatRawImage()
+        
+        [MenuItem("GameObject/StackUI/Text Button")]
+        static void CreateTextButton()
         {
-            GameObject go = new GameObject("UIRawImage", typeof(UIRawImage));
-            go.GetComponent<UIRawImage>().raycastTarget = false;
             if (Selection.activeTransform && Selection.activeTransform.GetComponentInParent<Canvas>())
-                go.transform.SetParent(Selection.activeTransform);
+            {
+                Transform p = Selection.activeTransform;
+                RectTransform button = CreateButton(p);
+                UIButton btn = button.gameObject.GetComponent<UIButton>();
 
-            else
-                go.transform.SetParent(CheckCanvas());
-            go.layer = LayerMask.NameToLayer("UI");
-            Selection.activeGameObject = go;
+
+
+                RectTransform showTarget = new GameObject("ShowTarget").AddComponent<RectTransform>();
+                showTarget.gameObject.layer = LayerMask.NameToLayer("UI");
+                showTarget.SetParent(button, false);
+                var text = showTarget.gameObject.AddComponent<Text>();
+                text.text = "Button";
+                text.raycastTarget = false;
+                text.supportRichText = false;
+                text.color = Color.black;
+                text.fontSize = 24;
+                text.alignment = TextAnchor.MiddleCenter;
+
+                showTarget.anchorMin = Vector2.zero;
+                showTarget.anchorMax = Vector2.one;
+                showTarget.anchoredPosition = Vector2.zero;
+                showTarget.sizeDelta = Vector2.zero;
+
+                btn.showTarget = text;
+                btn.targetGraphic = text;
+                
+            }
+            
+
         }
-        [MenuItem("GameObject/UI/Button")]
-        static void CreateButton()
+        [MenuItem("GameObject/StackUI/Image Button")]
+        static void CreateImageButton()
         {
-            Transform p;
             if (Selection.activeTransform && Selection.activeTransform.GetComponentInParent<Canvas>())
-                p = Selection.activeTransform;
-            else
-                p = CheckCanvas();
+            {
+                Transform p = Selection.activeTransform;
+                RectTransform button = CreateButton(p);
+                UIButton btn = button.gameObject.GetComponent<UIButton>();
 
+
+                RectTransform showTarget = new GameObject("ShowTarget").AddComponent<RectTransform>();
+                showTarget.gameObject.layer = LayerMask.NameToLayer("UI");
+                showTarget.SetParent(button, false);
+                var image = showTarget.gameObject.AddComponent<Image>();
+                image.raycastTarget = false;
+                showTarget.anchorMin = Vector2.zero;
+                showTarget.anchorMax = Vector2.one;
+                showTarget.anchoredPosition = Vector2.zero;
+                showTarget.sizeDelta = Vector2.zero;
+
+                btn.showTarget = image;
+                btn.targetGraphic = image;
+
+                Selection.activeGameObject = button.gameObject;
+            }
+            else
+            {
+                Debug.Log("需要在画布钟创建!");
+            }
+        }
+        private static RectTransform CreateButton(Transform parent)
+        {
             RectTransform button = new GameObject("UIButton").AddComponent<RectTransform>();
             button.gameObject.layer = LayerMask.NameToLayer("UI");
-            button.SetParent(p, false);
+            button.SetParent(parent, false);
             button.sizeDelta = new Vector2(160, 50);
-            var raycasetTarget = button.gameObject.AddComponent<UIRawImage>();
-            raycasetTarget.texture = null;
+            var raycasetTarget = button.gameObject.AddComponent<Image>();
+            raycasetTarget.sprite = null;
+            raycasetTarget.color = new Color(1,1,1,0);
             UIButton btn = button.gameObject.AddComponent<UIButton>();
             btn.enabled = true;
-            btn.transition = Selectable.Transition.None;
-
-
-
-            RectTransform showTarget = new GameObject("ShowTarget").AddComponent<RectTransform>();
-            showTarget.gameObject.layer = LayerMask.NameToLayer("UI");
-            showTarget.SetParent(button, false);
-            var text = showTarget.gameObject.AddComponent<UIText>();
-            text.text = "Button";
-            text.raycastTarget = false;
-            text.supportRichText = false;
-            text.color = Color.black;
-            text.fontSize = 24;
-            text.alignment = TextAnchor.MiddleCenter;
-
-            showTarget.anchorMin = Vector2.zero;
-            showTarget.anchorMax = Vector2.one;
-            showTarget.anchoredPosition = Vector2.zero;
-            showTarget.sizeDelta = Vector2.zero;
-
-            btn.showTarget = text;
             btn.interval = 0.2f;
-
-            Selection.activeGameObject = button.gameObject;
-        }
-
-
-
-        private static Transform CheckCanvas()
-        {
-            var canvas = Object.FindObjectOfType<Canvas>();
-            Transform trans;
-            if (!canvas)
-                trans = SpawnCanvas(null);
-            else
-                trans = canvas.transform;
-            if (!Object.FindObjectOfType<EventSystem>())
-            {
-                new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            }
-            return trans;
-
-
-
+            btn.transition = Selectable.Transition.ColorTint;
+            return button;
         }
     }
 }

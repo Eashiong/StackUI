@@ -9,7 +9,7 @@
 * 初步的MVP规范
 * 支持弹窗，界面叠加
 * UI生命周期
-* 带返回键的页面模板
+* 一些有用的页面模板
 * 一键绑定所有物体到脚本Inspector属性面板。
 * Hierarchy可根据模板创建物体，统一规范并提升开发效率
 * 你甚至可以不把它当作UI框架，看成功能模块框架，它只是简单的约定了模块的载入/退出方式和生命周期
@@ -32,6 +32,9 @@
 |GetWin    |    获取某窗口   |     |
 |Clear    |    删除所有页面和窗口   |     |
 
+## 设置与界面模板
+提供一些模板 在Hierarchy可根据模板创建物体。
+自己也可编辑模板，模板prefab在Assets/Tools/Template/目录下，这个目录是可以更改的，通过顶部菜单StackUI/Setting打开配置面板进行更改
 
 ## 页面生命周期
 
@@ -119,20 +122,10 @@ Navigation.ShowWin("LoadingPresenter");
 
 制作一个简单的登录页和主页，演示他们之间的跳转逻辑
 
-1，导入代码到你的项目，并打开SpawnViewEditor.cs 修改函数SpawnCanvas. 尤其是修改如下两行代码
-```
-  static Transform SpawnCanvas(Camera cam)
-  {
-      .......
-      //修改成自己需要的分辨率和适配方式
-      scaler.referenceResolution = new Vector2(750,1624);
-      scaler.matchWidthOrHeight = 1;
-      ......
-  }
-  ```
-  2，新建场景，并在场景中创建一个EventSystem
+
+  1，导入代码到你的项目,新建场景，并在场景中创建一个EventSystem
   
-  3，在场景中单击Hierarchy MVP/Simple UI,并更名为LoginView,在画布下新建一个按钮并更名为LoginBtn，完成后生成prefab并放到Resources下
+  3，在场景中单击Hierarchy StackUI/Simple View,并更名为LoginView,在画布下新建一个按钮并更名为LoginBtn，完成后生成prefab并放到Resources下
   
   4，新建视图类脚本LoginView.cs
   ```
@@ -164,37 +157,7 @@ Navigation.ShowWin("LoadingPresenter");
         }
     }
   ```
-这里是UI全部的生命周期函数
 
-  ```
-        //资源加载后调用
-        public override void OnAssetLoaded()
-        {
-            base.OnAssetLoaded();
-        }
-        //被打开的时候调用（重复打开不会调用它）
-        public override void OnInit(object arg)
-        {
-            base.OnInit(arg);
-        }
-        //已经是打开状态下 重复打开时调用
-        public override void OnReInit(object arg)
-        {
-            base.OnReInit(arg);
-        }
-        //关闭时候调用
-        public override void OnClose()
-        {
-            base.OnClose();
-        }
-        //释放资源前调用(如果Navigation.SetDontDestroyAsset，或注册的时候,标识了隐藏的时候销毁资源)
-        //它在OnClose后调用
-        public override void OnDispose()
-        {
-            base.OnDispose();
-
-        }
-  ```
   我们已经完成了登录界面 接下来制作一个主页
   
   6，在新场景中单击Hierarchy MVP/Return UI,并更名为MainView,完成后生成prefab并放到Resources下
