@@ -1,0 +1,19 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using StackUI;
+#NAMESPACEBEGIN#public class #SCRIPTNAME# : View
+{
+    #ATTRIBUTEBLOCK# 
+    // 显示时调用
+    // public override void OnShow()
+    // {
+    //     base.OnShow();
+    // }
+    // 关闭时调用
+    // public override void OnClose()
+    // {
+    //     base.OnClose();
+    // }
+
+}#NAMESPACEEND#
