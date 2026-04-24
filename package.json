@@ -1,20 +1,27 @@
 {
   "name": "com.eashiong.stackui",
   "displayName": "StackUI",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "unity": "2019.4",
-  "description": "轻量、直观的 Unity 栈式 UI 框架：页面导航、弹窗叠加、生命周期与资源缓存控制。",
+  "description": "Unity 栈式 UI 框架",
   "keywords": [
     "UI",
     "Navigation",
     "Stack",
-    "Presenter",
     "UGUI"
   ],
+  "samples": [
+        {
+          "displayName": "Demo",
+          "description": "演示该工具包的基本功能。",
+          "path": "Demo~"
+        }
+    ],
   "author": {
-    "name": "eashiong"
+    "name": "https://github.com/Eashiong"
   },
   "dependencies": {
     "com.unity.ugui": "1.0.0"
-  }
+  },
+  "_fingerprint": "aad51bca1de15fe96f30f8e1997dc948fcd35b07"
 }

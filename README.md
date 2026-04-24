@@ -40,6 +40,20 @@
 
 ---
 
+## 安装方式
+
+下载项目整个拷贝到项目Assets根路径下，或者使用推荐方式：    
+
+使用包管理器 Install package from git URL，填入 https://github.com/Eashiong/StackUI
+
+### 导入示例
+
+里面提供了一些使用例子，请查看。如果是下载项目导到到工程的 请把Demo~ 文件改名为Demo 即就会把示例自动导入到工程中
+
+如果是使用使用包管理器安装的，可以直接从包管理器安装示例
+
+
+---
 
 ## 快速开始
 
@@ -190,12 +204,5 @@ string asset = Navigation.GetAssetName<HomePresenter>();
 ---
 
 
-
-
-## Demo
-
-建议运行项目中的 Demo 场景
-
----
 
 
