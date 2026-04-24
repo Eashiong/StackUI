@@ -1,0 +1,18 @@
+{
+    "name": "StackUI.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:58699f9c01e7f9948b80cf24cb665803"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

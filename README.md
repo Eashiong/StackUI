@@ -1,243 +1,201 @@
 # StackUI
-基于UGUI的栈式UI导航框架，
 
-## 功能列表
-
-* 页面前进、后退、弹窗、回退、回退到开始、页面传参等导航功能
-* 页面默认缓存，也可单独自定义某个页面或全部页面是否需要缓存
-* 页面默认Resource加载，也可单独自定义某个页面或全部页面的加载方式
-* 初步的MVP规范
-* 支持弹窗，界面叠加
-* UI生命周期
-* 一些有用的页面模板
-* 一键绑定所有物体到脚本Inspector属性面板。
-* Hierarchy可根据模板创建物体，统一规范并提升开发效率
-* 你甚至可以不把它当作UI框架，看成功能模块框架，它只是简单的约定了模块的载入/退出方式和生命周期
-
-## 页面打开与关闭
-
-| 函数 | 功能| 备注 |
-| ------- | ------- |------- |
-|Navigation.AddTable<Type>("ID","assetName");    |    注册页面     |  ID自己指定的唯一ID   assetName UI资源，详解看下文  |
-|Current    |    获取当前页     |       |
-|Push    |    打开一个页面     |    当前页面关闭，新页面覆盖    |
-|PopAndPush     |    与当前页面置换     |  当前页面关闭，且不保留历史，也就是说新页面后退不会回到这个旧页面上，而是会回到这个旧页面的上一页
-|PushAndRemoveAll    |    清除历史记录并打开一个新页面   | 不再保留所有的页面打开历史，也就是说如果新页面也点击后退是没有任何效果的    |
-|PushAndRemoveUntil    |    清除历史记录并打开一个新页面   | 删除页面历史直到满足你设定的条件时停止删除    |
-|Pop    |    退出当前页   | 关闭当前页面，将会显示上一页    |
-|PopUntil    |    持续退出页面,直到符合条件为止   | 可以实现一路退出到你想要的那个页面为止   |
-|ShowWin    |    叠加显示一个窗口     |       |
-|HideWin    |    隐藏窗口     |       |
-|ExistWin    |    当前某窗口是否打开     |       |
-|GetWin    |    获取某窗口   |     |
-|Clear    |    删除所有页面和窗口   |     |
-
-## 设置与界面模板
-提供一些模板 在Hierarchy可根据模板创建物体。
-自己也可编辑模板，模板prefab在Assets/Tools/Template/目录下，这个目录是可以更改的，通过顶部菜单StackUI/Setting打开配置面板进行更改
-
-## 页面生命周期
-
-  ```
-        //资源加载后调用
-        public override void OnAssetLoaded()
-        {
-            base.OnAssetLoaded();
-        }
-        //被打开的时候调用（重复打开不会调用它）
-        //arg 页面传参
-        public override void OnInit(object arg)
-        {
-            base.OnInit(arg);
-        }
-        //已经是打开状态下 重复打开时调用
-        //arg 页面传参
-        public override void OnReInit(object arg)
-        {
-            base.OnReInit(arg);
-        }
-        //关闭时候调用
-        public override void OnClose()
-        {
-            base.OnClose();
-        }
-        //释放资源前调用(如果Navigation.SetDontDestroyAsset，或注册的时候,标识了隐藏的时候销毁资源)
-        //它在OnClose后调用
-        public override void OnDispose()
-        {
-            base.OnDispose();
-
-        }
-  ```
-## 资源加载方式
-你应该有一个全局的脚本，游戏一开始时候注册所有页面
-```
-void Awake()
-{
-    //LoadingPresenter为逻辑代码，“LoadingPresenter”页面ID，"LoadingWin"资源路径
-    Navigation.AddTable<LoadingPresenter>("LoadingPresenter","LoadingWin");
-    Navigation.AddTable<SimplePresenter>("SimplePresenter","SimpleView");
-    .......
-
-}
-```
-
-默认页面关闭不会删除gameobject和资源，只是隐藏，如果希望页面关闭的时候也删除资源 请使用：
-```Navigation.AddTable<LoadingPresenter>("LoadingPresenter","LoadingWin",false);```
-传入false,这样页面关闭的时候才会触发生命周期函数OnDispose
+轻量、直观、可落地的 Unity 栈式 UI 框架。  
+用最少代码完成页面导航、弹窗叠加、生命周期管理与资源缓存控制。
 
 
+---
+
+## 主要功能
+
+| 核心能力 | 说明 |核心 API | 
+| --- |--- |--- |
+| 栈式导航 | 提供栈式的页面打开、后退等导航功能  | `Navigation.Push` / `Navigation.Pop` / `Navigation.CanPop` 等系列方法|
+| 页面参数 |  页面切换时支持传递上下文参数 | `Navigation.Push` / `Navigation.Pop`  等系列方法|
+| 历史裁剪 |  栈式链路中根据条件把某一段页面路径去除 |`Navigation.PushAndRemoveAll` / `Navigation.PushAndRemoveUntil` / `Navigation.PopUntil` /`Navigation.Clear`|
+| 弹窗管理 |  弹窗叠加显示在页面上 |`Navigation.ShowWin` / `Navigation.HideWin` / `Navigation.ExistWin` / `Navigation.GetWin` |
+| 生命周期 |  可重写弹窗和页面全生命周期|`Presenter.OnAssetLoaded` `Presenter.OnInit` / `Presenter.OnReInit` / `Presenter.OnClose` / `Presenter.OnDispose` |
+| 资源策略 |  可单独控制某个页面具体使用资源和缓存策略|`Navigation.SetDontDestroyAsset` / `Navigation.SetAssetName` `Navigation.AddTable` |
+| 事件管理 |  自动回收UI事件|`Presenter.ListenUnity` |
+| UI模板 |  自定义UI风格 方便编辑器里直接创建| 无 |
+
+---
+
+## 框架设计
+
+* Navigation 负责页面 窗口管理，提供了控制页面和获取状态的方法
+* Presenter 负责业务逻辑 ，由用户继承
+* View 负责界面显示，由用户继承
 
 
+## 生命周期（Presenter）
 
-资源加载默认使用Reources.Load,你的预制体应该放在Resources目录
+| 回调 | 触发时机 | 常见用途 |
+| --- | --- | --- |
+| `OnAssetLoaded()` | 资源首次加载或重载后 | 初始化一次性资源 |
+| `OnInit(object arg)` | 界面从关闭 -> 打开 | 绑定事件、根据参数初始化界面 |
+| `OnReInit(object arg)` | 已打开状态下再次打开 | 刷新数据、局部重绘 |
+| `OnClose()` | 界面关闭（隐藏/销毁前） | 停止逻辑 |
+| `OnDispose()` | 资源销毁前（仅销毁路径） | 清理资源 |
 
-你也可以指定加载方式，如果想用Assetbundle，自己实现CustomLoader即可
-
-```
-Navigation.AddTable<LoadingPresenter>("LoadingPresenter","LoadingWin", false,CustomLoader);
-private GameObject CustomLoader(string sourceName)
-{
-    var prefab = Resources.Load<GameObject>(sourceName);
-    if (prefab == null)
-    {
-        throw new System.Exception("找不到资源，请检查拼写:" + sourceName);
-    }
-    var go = GameObject.Instantiate(prefab);
-    go.name = sourceName;
-    return go;
-}
-    
-```
-
-同一套UI代码，使用SetAssetName函数你还可以动态的在任意位置使用不同的UI，前提是他们的逻辑应该是相同的，只是皮肤不同而已
-某些场合你可能需要这个功能，比如横竖屏切换、夜间模式、定时活动/节日模式皮肤
-
-```
-Navigation.SetAssetName("LoadingPresenter","NewLoadingWin");
-Navigation.ShowWin("LoadingPresenter");
-```
-
-## 开始
-
-制作一个简单的登录页和主页，演示他们之间的跳转逻辑
+---
 
 
-  1，导入代码到你的项目,新建场景，并在场景中创建一个EventSystem
-  
-  3，在场景中单击Hierarchy StackUI/Simple View,并更名为LoginView,在画布下新建一个按钮并更名为LoginBtn，完成后生成prefab并放到Resources下
-  
-  4，新建视图类脚本LoginView.cs
-  ```
-  using StackUI;
-  public class LoginView : View
-  {
-      public UIButton loginBtn;
-  }
-  ```
-  脚本挂载到prefab LoginView上，并在Inspector上点击绑定引用
-  
-  5，新建脚本LoginPresenter.cs
-  ```
-    using StackUI;
-    public class LoginPresenter:Presenter
-    {
-        private LoginView myView;
-        public override void OnInit(object arg)
-        {
-            base.OnInit(arg);
-            myView =  view as LoginView;
-            myView.loginBtn.AddListener(()=> Navigation.Push("MainPresenter","Hello"));
-        }
-        public override void OnClose()
-        {
-            base.OnClose();
-            myView.loginBtn.RemoveAllListeners();
+## 快速开始
 
-        }
-    }
-  ```
+### 1）注册页面
 
-  我们已经完成了登录界面 接下来制作一个主页
-  
-  6，在新场景中单击Hierarchy MVP/Return UI,并更名为MainView,完成后生成prefab并放到Resources下
-  
-  7，新建视图类脚本MainView.cs，并继承PageView,除此之外我们不加任何代码
-  ```
+```csharp
 using StackUI;
-public class MainView : PageView
-{
-    
-}
-  ```
-  绑定在prefab上，并在Inspector上点击绑定引用
-  
-  8，编写MainPresenter.cs
-  ```
-  using StackUI;
-  public class MainPresenter:Presenter
-{
-    MainView myView;
-    public override void OnInit(object arg)
-    {
-        base.OnInit(arg);
-        Debug.Log(arg as string);//输出 Hello
-        myView = view as MainView;
-        myView.backAction = ()=> Navigation.Pop(this);//页面后退
-
-    }
-    public override void OnClose()
-    {
-        base.OnClose();
-        myView.backAction = null;
-    }
-}
-  ```
-  
-  2个页面到此制作完成
-  
- 9，在场景中新建一个物体并挂载脚本Main.cs，用于注册我们制作好的两个页面
- ```
- using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using StackUI;
-public class Test: MonoBehaviour
+
+public class AppEntry : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Start()
     {
-        //注册类、ID、和资源名
-        //建议ID和类名一致
-        Navigation.AddTable<LoginPresenter>("LoginPresenter","LoginView");
-        Navigation.AddTable<MainPresenter>("MainPresenter","MainView");
+        Navigation.AddTable<LoginPresenter>("UI/LoginView");
+        Navigation.AddTable<HomePresenter>("UI/HomeView");
+        Navigation.Push<LoginPresenter>();
+    }
+}
+```
 
-        //传入ID  打开登录页
-        Navigation.Push("LoginPresenter");
-        
+### 2）定义 View
+
+```csharp
+using StackUI;
+
+public class LoginView : View
+{
+    public UIButton loginBtn;
+}
+```
+
+### 3）定义 Presenter
+
+```csharp
+using StackUI;
+
+public class LoginPresenter : Presenter<LoginView>
+{
+    public override void OnInit(object arg)
+    {
+        ListenUnity(view.loginBtn.onClick, OnLoginClick);
     }
 
+    private void OnLoginClick()
+    {
+        Navigation.PopAndPush<HomePresenter>("from login");
+    }
 }
+```
 
- ```
- 
- 
- 运行！点击登录按钮会跳转到mainView，在mainView点后退图标会回到登录
- 
- 查看demo了解更多使用方式
-  
-  
-  
+---
+
+## 特殊场景举例
+
+| 业务场景 | 推荐 API |说明 |
+| --- | --- |--- |
+| 登录成功后进入主页，后续后退时候不需要返回登录页 | `PopAndPush` |把主页与登录页进行置换 |
+| 支付完成后回到主线并清理支付流程页 | `PushAndRemoveUntil` |可以跳过支付中间的一系列页面直接回到主线|
+| 连续返回直到登录页 | `PopUntil` / `Clear + Push` | 强制退出登录 |
+| 节日活动换皮 | `SetAssetName` | 可下次刷新或立即刷新页面皮肤 |
+
+
+---
+
+
+
+
+
+## 资源加载与缓存策略
+
+### 默认行为
+
+- 默认加载器：`Resources.Load + Instantiate`
+- 默认缓存：`dontDestroy = true`（关闭后隐藏，不销毁）
+
+### 注册时指定策略
+
+```csharp
+Navigation.AddTable<HomePresenter>("UI/HomeView", dontDestroy: false);
+```
+
+### 注册时使用自定义 Loader
+
+```csharp
+Navigation.AddTable<HomePresenter>(
+    "UI/HomeView",
+    dontDestroy: true,
+    loader: CustomLoader
+);
+
+private GameObject CustomLoader(string assetName)
+{
+    var prefab = Resources.Load<GameObject>(assetName);
+    return prefab == null ? null : Instantiate(prefab);
+}
+```
+
+### 运行时换肤
+
+```csharp
+Navigation.SetAssetName<HomePresenter>("UI/HomeView_Festival");//下次打开界面时会自动生效
+```
+
+```csharp
+//如果想立即生效 使用置换API
+if(Navigation.IsCurrent<HomePresenter>())
+{
+    Navigation.PopAndPush<HomePresenter>();
+}
+```
+---
+
+## 常用查询接口
+
+```csharp
+var current = Navigation.CurrentInstance();
+var currentId = Navigation.CurrentInstanceID();
+bool isHome = Navigation.IsCurrent<HomePresenter>();
+bool canBack = Navigation.CanPop();
+
+bool hasBagWin = Navigation.ExistWin<BagWinPresenter>();
+var bagWin = Navigation.GetWin<BagWinPresenter>();
+
+string asset = Navigation.GetAssetName<HomePresenter>();
+```
+
+---
+
+## 编辑器工具
+
+### UI模板
+
+* 支持右键创建模板UI    
+
+<img src=".git_image/1.jpg" width="40%" alt="image"> 
+
+
+* 自定义模板
+
+在Assets面板右键创建一个 Setting Data资源 按需配置prefab
+
+<img src=".git_image/2.jpg" width="60%" alt="image">
+
+然后配置到Project Setting/StackUI 生效
+
+<img src=".git_image/3.jpg" width="60%" alt="image">
+
+---
+
+
+
+
 ## Demo
-运行场景Demo/Scenes/SampleScene.unity,游戏分辨率尽量设置成竖屏，因为demo中的界面是这么适配的
 
-demo涵盖如下使用场景
-* 页面跳转和生命周期
-* 闪屏画面演示
-* 带返回键的页面
-* 展示3D场景和UI混合
-* loading窗口叠加在其他UI界面上
-* 页面之间传参
+建议运行项目中的 Demo 场景
 
+---
 
 

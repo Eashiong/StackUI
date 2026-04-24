@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cbeb6597e8bc1c49866aab0d7d69903, type: 3}
+  m_Name: StackUISetting
+  m_EditorClassIdentifier: 
+  simpleUITemplatePath: {fileID: 7047437765954620298, guid: c57bf879d1052e24d89a0c0be3bd183e,
+    type: 3}
+  pageTemplatePath: {fileID: 2490661571083695243, guid: 3ab15f7c0daeb9249b6699f9c55844bc,
+    type: 3}
+  popupTemplatePath: {fileID: 8950627869167115144, guid: fae25efd6dab2674880036a2e9adb7e7,
+    type: 3}
+  TextButtonTemplatePath: {fileID: 1113486930507568022, guid: 898f48b7e80c1964288fa762fdbc67ff,
+    type: 3}
+  ImageButtonTemplatePath: {fileID: 268859035122032967, guid: 8a597762fb407a441951ba0c390d8b2e,
+    type: 3}
