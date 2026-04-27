@@ -8,11 +8,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using System;
+using UnityEngine.EventSystems;
+
+
 namespace StackUI
 {
     [System.Serializable]
     public class UIButton : Button
     {
+
+        
         /// <summary>
         /// 按钮显示图标、文字
         /// </summary>
@@ -25,38 +30,42 @@ namespace StackUI
         [SerializeField]
         [Tooltip("单位秒，用于防止暴力重复点击")]
         public float interval = 0.2f;
+        private float _lastClickTime = -999f;
 
 
-        protected override void Awake()
+        private bool CanPass()
         {
-            base.Awake();
-            this.onClick.AddListener(OnClick);
-            if (showTarget && showTarget.gameObject != this.gameObject)
-                showTarget.raycastTarget = false;
+            if (interval <= 0f) return true;
+            var now = Time.unscaledTime; // 不受 Time.timeScale 影响
+            if (now - _lastClickTime < interval) return false;
+            _lastClickTime = now;
+            return true;
         }
-        private float timer;
-        protected void Update()
+        public override void OnPointerClick(PointerEventData eventData)
         {
-            if (this.interactable == false)
+            if (eventData.button == PointerEventData.InputButton.Left)
             {
-                timer = timer + Time.deltaTime;
-                if (timer >= interval)
+                if (CanPass())
                 {
-                    this.interactable = true;
-                    timer = 0;
+                    base.OnPointerClick(eventData);
                 }
             }
         }
-        private void OnClick()
+        public override void OnSubmit(BaseEventData eventData)
         {
-            if (interval > 0)
-                this.interactable = false;
+            if (CanPass())
+            {
+                base.OnSubmit(eventData);
+            }
         }
+
+
+
+
 
 
         public void AddListener(UnityAction action)
         {
-            this.onClick.RemoveAllListeners();
             this.onClick.AddListener(action);
 
         } 
@@ -65,4 +74,7 @@ namespace StackUI
 
 
     }
+
+   
+    
 }

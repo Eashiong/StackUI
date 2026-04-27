@@ -209,6 +209,7 @@ namespace StackUI
             {
                 this.unityEvent = unityEvent;
                 this.action = action;
+                this.unityEvent.AddListener(this.action);
             }
             public void RemoveListener()
             {
@@ -224,6 +225,7 @@ namespace StackUI
             {
                 this.unityEvent = unityEvent;
                 this.action = action;
+                this.unityEvent.AddListener(this.action);
             }
 
             public void RemoveListener()
@@ -241,6 +243,7 @@ namespace StackUI
             {
                 this.unityEvent = unityEvent;
                 this.action = action;
+                this.unityEvent.AddListener(this.action);
             }
 
             public void RemoveListener()
@@ -258,6 +261,7 @@ namespace StackUI
             {
                 this.unityEvent = unityEvent;
                 this.action = action;
+                this.unityEvent.AddListener(this.action);
             }
 
             public void RemoveListener()
@@ -275,6 +279,7 @@ namespace StackUI
             {
                 this.unityEvent = unityEvent;
                 this.action = action;
+                this.unityEvent.AddListener(this.action);
             }
 
             public void RemoveListener()
