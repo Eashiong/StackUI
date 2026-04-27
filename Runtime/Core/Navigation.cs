@@ -55,7 +55,10 @@ namespace StackUI
             }
             var cur = table[id];
             uiLayer.Push(cur);
-            cur.Build(arg);
+            if(!cur.Build(arg))
+            {
+                uiLayer.Pop();
+            }
         }
         /// <summary>
         /// 压入一个页面到屏幕前 这将打开一个页面
@@ -78,7 +81,6 @@ namespace StackUI
         {
             if(!CanPop())
             {
-                Debug.LogError("StackUI:无法关闭仅存的一个页面");
                 return;
             }
 
@@ -589,19 +591,32 @@ namespace StackUI
         {
             isDirty = viewName != name;
             viewName = name;
+
+            if(isDirty)
+            {
+                if(Presenter != null && !Presenter.enable && Presenter.view != null)
+                {
+                    Presenter.Dispose();
+                    UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
+                }
+                
+            }
         }
 
         //创建一个Ui 并触发生命周期初始化相关函数
         //如果第一次创建 触发AssetLoaded
         //如果未激活 触发 Init 不触发 ReInit
         //如果已激活 触发 ReInit 不触发 Init
-        internal void Build(object arg)
+        internal bool Build(object arg)
         {
             if (Presenter == null)
             {
                 Presenter = System.Activator.CreateInstance(t) as BasePresenter;
                 Presenter.id = id;
-                LoadAsset();
+                if(!LoadAsset())
+                {
+                    return false;
+                }
                 
             }
             else if(isDirty)
@@ -610,7 +625,10 @@ namespace StackUI
                 {
                     UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
                 }
-                LoadAsset();
+                if(!LoadAsset())
+                {
+                    return false;
+                }
             }
 
             
@@ -619,26 +637,29 @@ namespace StackUI
             else
                 Presenter.ReInit(arg);
 
-
-            void LoadAsset()
+            return true;
+            
+        }
+        private bool LoadAsset()
+        {
+            var go = loader(this.viewName);
+            if(go == null)
             {
-                var go = loader(this.viewName);
-                if(go == null)
-                {
-                    Presenter = null;
-                    Debug.LogError($"StackUI:无法构建UI，因为无法加载资源，请检测对应的资源{this.viewName}");
-                    return;
-                }
-                Presenter.view = go.GetComponent<View>();
-                if(Presenter.view == null)
-                {
-                    Presenter = null;
-                    Debug.LogError($"StackUI:无法构建UI，因为{go}缺少View组件，请检测对应的资源{this.viewName}");
-                    return;
-                }
-                isDirty = false;
-                Presenter.AssetLoaded();
+                Presenter = null;
+                Debug.LogError($"StackUI:无法构建UI，因为无法加载资源，请检测对应的资源{this.viewName}");
+                return false;
             }
+            Presenter.view = go.GetComponent<View>();
+            if(Presenter.view == null)
+            {
+                Presenter = null;
+                Debug.LogError($"StackUI:无法构建UI，因为{go}缺少View组件，请检测对应的资源{this.viewName}");
+                UnityEngine.GameObject.Destroy(go);
+                return false;
+            }
+            isDirty = false;
+            Presenter.AssetLoaded();
+            return true;
         }
 
 
@@ -653,7 +674,7 @@ namespace StackUI
             {
                 try { Presenter.Close(); } catch(System.Exception e) {Debug.LogError(e);};
             }
-            if (forceDestroy || !dontDestroy)
+            if (forceDestroy || !dontDestroy || isDirty)
             {
                 Presenter.Dispose();
                 UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
