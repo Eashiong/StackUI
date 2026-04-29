@@ -23,6 +23,21 @@ namespace StackUI
         /// </summary>
         public Graphic showTarget;
 
+        public void SetText(string text)
+        {
+            if (showTarget && showTarget is Text textTarget)
+            {
+                textTarget.text = text;
+            }
+        }
+        public void SetImage(Sprite sprite)
+        {
+            if (showTarget && showTarget is Image imageTarget)
+            {
+                imageTarget.sprite = sprite;
+            }
+        }
+
 
         /// <summary>
         /// 间隔时间 单位毫秒

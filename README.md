@@ -15,7 +15,7 @@
 | 历史裁剪 |  栈式链路中根据条件把某一段页面路径去除 |`Navigation.PushAndRemoveAll` / `Navigation.PushAndRemoveUntil` / `Navigation.PopUntil` /`Navigation.Clear`|
 | 弹窗管理 |  弹窗叠加显示在页面上 |`Navigation.ShowWin` / `Navigation.HideWin` / `Navigation.ExistWin` / `Navigation.GetWin` |
 | 生命周期 |  可重写弹窗和页面全生命周期|`Presenter.OnAssetLoaded` `Presenter.OnInit` / `Presenter.OnReInit` / `Presenter.OnClose` / `Presenter.OnDispose` |
-| 资源策略 |  可单独控制某个页面具体使用资源和缓存策略|`Navigation.SetDontDestroyAsset` / `Navigation.SetAssetName` `Navigation.AddTable` |
+| 资源策略 |  可单独控制某个页面具体使用资源和缓存策略|`Navigation.SetDontDestroyAsset` / `Navigation.SetAssetName`  |
 | 事件管理 |  自动回收UI事件|`Presenter.ListenUnity` |
 | UI模板 |  自定义UI风格 方便编辑器里直接创建| 无 |
 
@@ -132,7 +132,7 @@ public class LoginPresenter : Presenter<LoginView>
 ### 注册时指定策略
 
 ```csharp
-Navigation.AddTable<HomePresenter>("UI/HomeView", dontDestroy: false);
+Navigation.AddTable<HomePresenter>("UI/HomeView", dontDestroy: false,CustomAssetRemoveHandler);
 ```
 
 ### 注册时使用自定义 Loader
@@ -141,13 +141,29 @@ Navigation.AddTable<HomePresenter>("UI/HomeView", dontDestroy: false);
 Navigation.AddTable<HomePresenter>(
     "UI/HomeView",
     dontDestroy: true,
-    loader: CustomLoader
+    loader: CustomLoader,
+    AssetRemoveHandler
 );
 
-private GameObject CustomLoader(string assetName)
+private GameObject CustomLoader(string sourceName)
 {
-    var prefab = Resources.Load<GameObject>(assetName);
-    return prefab == null ? null : Instantiate(prefab);
+    //比如从本地读取
+    //return GameObject.Instantiate(Resources.Load<GameObject>(sourceName));
+    //比如从AB包
+    //var assetBundle = AssetBundle.LoadFromFile(abfilePath);
+    //return assetBundle.LoadAsset<GameObject>(sourceName);
+
+    //这里返回一个空物体
+    return new GameObject(sourceName).AddComponent<AssetLoaderView>().gameObject;
+}
+private void CustomAssetRemoveHandler(AssetRemoveHandlerArgs args)
+{
+    Debug.Log($"自定义资源清理逻辑: id:{args.id}, viewName:{args.viewName}, asset:{args.asset} 被删除");
+
+    //比如清理AB包
+    //assetBundle.Unload(false);
+
+    UnityEngine.GameObject.Destroy(args.asset);
 }
 ```
 

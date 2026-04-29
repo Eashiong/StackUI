@@ -18,7 +18,7 @@ namespace StackUI
         private static Stack<RouteBuilder> uiLayer = new Stack<RouteBuilder>();
         private static Dictionary<string, RouteBuilder> winds = new Dictionary<string, RouteBuilder>();
 
-#region 显示新页面方法组
+
 
         /// <summary>
         /// 注册页面
@@ -28,10 +28,10 @@ namespace StackUI
         /// <param name="dontDestroy">界面关闭时不销毁物体</param>
         /// <param name="loader">自定义资源加载器</param>
 
-        public static void AddTable<T>(string viewName,bool dontDestroy = true,Func<string, GameObject> loader = null) where T:BasePresenter
+        public static void AddTable<T>(string viewName,bool dontDestroy = true,Func<string, GameObject> loader = null,Action<AssetRemoveHandlerArgs> assetRemoveHandler = null) where T:BasePresenter
         {
             System.Type t = typeof(T);
-            RouteBuilder builder = new RouteBuilder(t, viewName,loader).SetDontDestroy(dontDestroy);
+            RouteBuilder builder = new RouteBuilder(t, viewName,loader,assetRemoveHandler).SetDontDestroy(dontDestroy);
             table[builder.id] = builder;
         }
 
@@ -70,9 +70,7 @@ namespace StackUI
             System.Type t = typeof(T);
             Push(t.Name,arg);
         }
-#endregion
 
-#region 页面后退方法组
         /// <summary>
         /// 将当前屏幕页面移除，效果将显示上一页
         /// </summary>
@@ -91,6 +89,10 @@ namespace StackUI
 
         }
 
+
+
+
+#region 组合操作方法组
 
         /// <summary>
         /// 持续把当前屏幕页面移除(Pop)，直到符合条件为止
@@ -126,9 +128,6 @@ namespace StackUI
             }
             Debug.LogError("StackUI:PopUntil操作失败：条件似乎永远都不会返回真");
         }
-#endregion
-
-#region 组合操作方法组
 
         /// <summary>
         /// <para>把当前页面从屏幕移除 并压入一个新页面 效果等同于拿新页面置换当前页</para>
@@ -203,15 +202,19 @@ namespace StackUI
             if(until == null)
                 return;
 
+            if(CurrentInstanceID() == id)
+            {
+                return;
+            }
+
             int count = uiLayer.Count;
             for (int i = count - 1; i >= 0; i--)
             {
-                var builder = uiLayer.Peek();
-                builder.Close();
+                var builder = uiLayer.Peek();               
                 bool result = until(builder.id);
+                builder.Close();
                 if (result)
                 {
-                    uiLayer.Pop();
                     var cur = table[id];
                     uiLayer.Push(table[id]);
                     cur.Build(arg);
@@ -219,10 +222,20 @@ namespace StackUI
                 }
                 else
                 {
+                    
                     uiLayer.Pop();
                 }
             }
-            Debug.LogError("StackUI:操作失败：条件似乎永远都不会返回真");
+            if(until(""))
+            {
+                var cur = table[id];
+                uiLayer.Push(table[id]);
+                cur.Build(arg);
+            }
+            else
+            {
+                Debug.LogError("StackUI:操作失败：条件似乎永远都不会返回真");
+            }
 
         }
 
@@ -352,7 +365,7 @@ namespace StackUI
             return GetAssetName(typeof(T).Name);
         }
 
-        /// <summary>a
+        /// <summary>
         /// 当前页面是否能关闭(Pop)?
         /// <para>不适用于窗口</para>
         /// <para> 使用场景举例：判断当前页面是否能后退，来控制返回按钮或左滑操作是否可用 </para>
@@ -539,7 +552,21 @@ namespace StackUI
    
     }
 
-
+    public struct AssetRemoveHandlerArgs
+    {
+        /// <summary>
+        /// 资源名
+        /// </summary>
+        public string viewName;
+        /// <summary>
+        /// 唯一ID
+        /// </summary>
+        public string id;
+        /// <summary>
+        /// 资源对象
+        /// </summary>
+        public GameObject asset;
+    }
     /// <summary>
     /// 页面创建器
     /// </summary>
@@ -564,15 +591,18 @@ namespace StackUI
         //界面关闭时不删除资源
         private bool dontDestroy;
 
+        public Action<AssetRemoveHandlerArgs> assetRemoveHandler;
+
         /// <param name="t">页面class type</param>
         /// <param name="viewName">页面名、资源名</param>
         /// <param name="builder">物体创建器</param>
-        public RouteBuilder(System.Type t, string viewName, Func<string, GameObject> loader = null)
+        public RouteBuilder(System.Type t, string viewName, Func<string, GameObject> loader = null,Action<AssetRemoveHandlerArgs> assetRemoveHandler = null)
         {
             id = t.Name;
             this.viewName = viewName;
             this.t = t;
             this.dontDestroy = true;
+            this.assetRemoveHandler = assetRemoveHandler ?? OnAssetRemove;
             if (loader != null)
             {
                 this.loader = loader;
@@ -581,6 +611,10 @@ namespace StackUI
             {
                 this.loader = DefaultLoader;
             }
+        }
+        public void OnAssetRemove(AssetRemoveHandlerArgs args)
+        {
+            UnityEngine.GameObject.Destroy(args.asset);
         }
         public RouteBuilder SetDontDestroy(bool dontDestroy)
         {
@@ -597,7 +631,12 @@ namespace StackUI
                 if(Presenter != null && !Presenter.enable && Presenter.view != null)
                 {
                     Presenter.Dispose();
-                    UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
+                    
+                    assetRemoveHandler(new AssetRemoveHandlerArgs{
+                        id = id,
+                        viewName = viewName,
+                        asset = Presenter.view.gameObject
+                    });
                 }
                 
             }
@@ -623,7 +662,11 @@ namespace StackUI
             {
                 if(Presenter.view != null)
                 {
-                    UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
+                    assetRemoveHandler(new AssetRemoveHandlerArgs{
+                        id = id,
+                        viewName = viewName,
+                        asset = Presenter.view.gameObject
+                    });
                 }
                 if(!LoadAsset())
                 {
@@ -654,7 +697,11 @@ namespace StackUI
             {
                 Presenter = null;
                 Debug.LogError($"StackUI:无法构建UI，因为{go}缺少View组件，请检测对应的资源{this.viewName}");
-                UnityEngine.GameObject.Destroy(go);
+                assetRemoveHandler(new AssetRemoveHandlerArgs{
+                        id = id,
+                        viewName = viewName,
+                        asset = go
+                    });
                 return false;
             }
             isDirty = false;
@@ -677,7 +724,11 @@ namespace StackUI
             if (forceDestroy || !dontDestroy || isDirty)
             {
                 Presenter.Dispose();
-                UnityEngine.GameObject.Destroy(Presenter.view.gameObject);
+                assetRemoveHandler(new AssetRemoveHandlerArgs{
+                        id = id,
+                        viewName = viewName,
+                        asset = Presenter.view.gameObject
+                    });
                 Presenter = null;
             }
 
