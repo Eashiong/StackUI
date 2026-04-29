@@ -12,17 +12,9 @@ namespace StackUI
         {
             return CoroutineMgr.Ins.StartCoroutine(ator);
         }
-        // public static void Stop(this IEnumerator ator)
-        // {
-        //     CoroutineMgr.Ins.StopCoroutine(ator);
-        // }
         public static void Stop(this UnityEngine.Coroutine cor)
         {
             CoroutineMgr.Ins.StopCoroutine(cor);
-        }
-        public static UnityEngine.Coroutine Start(this IEnumerator ator,System.Action cb)
-        {
-            return CoroutineMgr.Ins.StartCoroutine(ator);
         }
     }
 }
