@@ -6,12 +6,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 namespace StackUI
 {
 
-    public static class Navigation
+    public static partial class Navigation
     {
         private static Dictionary<string, RouteBuilder> table = new Dictionary<string, RouteBuilder>();
         private const object emptyObj = default(object);
@@ -28,7 +29,11 @@ namespace StackUI
         /// <param name="dontDestroy">界面关闭时不销毁物体</param>
         /// <param name="loader">自定义资源加载器</param>
 
-        public static void AddTable<T>(string viewName,bool dontDestroy = true,Func<string, GameObject> loader = null,Action<AssetRemoveHandlerArgs> assetRemoveHandler = null) where T:BasePresenter
+        public static void AddTable<T>(string viewName,
+                                        bool dontDestroy = true,
+                                        Func<string, GameObject> loader = null,
+                                        Action<AssetRemoveHandlerArgs> assetRemoveHandler = null) 
+                                        where T:BasePresenter
         {
             System.Type t = typeof(T);
             RouteBuilder builder = new RouteBuilder(t, viewName,loader,assetRemoveHandler).SetDontDestroy(dontDestroy);
@@ -60,6 +65,8 @@ namespace StackUI
                 uiLayer.Pop();
             }
         }
+        
+
         /// <summary>
         /// 压入一个页面到屏幕前 这将打开一个页面
         /// </summary>
@@ -70,6 +77,7 @@ namespace StackUI
             System.Type t = typeof(T);
             Push(t.Name,arg);
         }
+        
 
         /// <summary>
         /// 将当前屏幕页面移除，效果将显示上一页
@@ -88,6 +96,7 @@ namespace StackUI
             builder.Build(arg);
 
         }
+        
 
 
 
@@ -128,6 +137,7 @@ namespace StackUI
             }
             Debug.LogError("StackUI:PopUntil操作失败：条件似乎永远都不会返回真");
         }
+       
 
         /// <summary>
         /// <para>把当前页面从屏幕移除 并压入一个新页面 效果等同于拿新页面置换当前页</para>
@@ -152,6 +162,9 @@ namespace StackUI
             uiLayer.Push(cur);
             cur.Build(arg);
         }
+
+        
+
         /// <summary>
         /// <para>把当前页面从屏幕移除 并压入一个新页面 效果等同于拿新页面置换当前页</para>
         /// <para>旧页面从路径中彻底移除，效果是后续操作如果新页面Pop后退时候会跳过这个页面，跳转到上上次页面</para>
@@ -163,6 +176,9 @@ namespace StackUI
         {
             PopAndPush(typeof(T).Name,arg);
         }
+
+        
+
         /// <summary>
         /// 打开一个页面，然后将之前的所有的页面移除
         /// </summary>
@@ -174,6 +190,9 @@ namespace StackUI
             Push(id, arg);
 
         }
+
+        
+
         /// <summary>
         /// 打开一个页面，然后将之前的所有的页面移除
         /// </summary>
@@ -183,6 +202,8 @@ namespace StackUI
         {
             PushAndRemoveAll(typeof(T).Name,arg);
         }
+
+        
 
 
         /// <summary>
@@ -239,6 +260,8 @@ namespace StackUI
 
         }
 
+        
+
         /// <summary>
         /// 将之前的所有的页面移除(Pop)，直到符合条件为止,然后打开一个页面（Push）
         /// <para>使用场景举例：从多层购买流程中跳到“支付结果页”，并移除中间步骤直到“商品详情页”或“首页”</para>
@@ -250,6 +273,8 @@ namespace StackUI
         {
             PushAndRemoveUntil(typeof(T).Name,until,arg);
         }
+
+        
 #endregion
 
 
@@ -426,11 +451,17 @@ namespace StackUI
             }
 
             var builder = table[id];
-            builder.Build(arg);
+            if(builder.Build(arg))
+            {
+                return null;
+            }
             if (!winds.ContainsKey(id))
                 winds.Add(id,builder);
-            return (builder as RouteBuilder).Presenter;
+            return builder.Presenter;
         }
+
+        
+
         /// <summary>
         /// 显示一个窗口 叠在页面上 不影响页面主栈
         /// </summary>
@@ -441,6 +472,8 @@ namespace StackUI
         {
             return ShowWin(typeof(T).Name,arg) as T;
         }
+
+        
 
 
         /// <summary>
@@ -468,6 +501,9 @@ namespace StackUI
             }
             return GetWin(id);
         }
+
+       
+
         /// <summary>
         /// 显示一个窗口 如果窗口已经存在了 指示要不要触发ReInit函数
         /// <para> 可如果窗口不存在 按正常流程显示一个窗口 </para>
@@ -482,7 +518,7 @@ namespace StackUI
         }
 
 
-
+       
 
         /// <summary>
         /// 隐藏窗口
@@ -550,201 +586,6 @@ namespace StackUI
 
 #endregion
    
-    }
-
-    public struct AssetRemoveHandlerArgs
-    {
-        /// <summary>
-        /// 资源名
-        /// </summary>
-        public string viewName;
-        /// <summary>
-        /// 唯一ID
-        /// </summary>
-        public string id;
-        /// <summary>
-        /// 资源对象
-        /// </summary>
-        public GameObject asset;
-    }
-    /// <summary>
-    /// 页面创建器
-    /// </summary>
-    public class RouteBuilder
-    {
-        /// <summary>
-        /// 页面
-        /// </summary>
-        /// <value></value>
-        public BasePresenter Presenter { get; private set; }
-        //Presenter type
-        private Type t;
-        //资源名
-        internal string viewName {get;private set; }
-        //唯一ID
-        internal string id;
-
-        private bool isDirty = false;
-
-        //资源创建器
-        private Func<string, GameObject> loader;
-        //界面关闭时不删除资源
-        private bool dontDestroy;
-
-        public Action<AssetRemoveHandlerArgs> assetRemoveHandler;
-
-        /// <param name="t">页面class type</param>
-        /// <param name="viewName">页面名、资源名</param>
-        /// <param name="builder">物体创建器</param>
-        public RouteBuilder(System.Type t, string viewName, Func<string, GameObject> loader = null,Action<AssetRemoveHandlerArgs> assetRemoveHandler = null)
-        {
-            id = t.Name;
-            this.viewName = viewName;
-            this.t = t;
-            this.dontDestroy = true;
-            this.assetRemoveHandler = assetRemoveHandler ?? OnAssetRemove;
-            if (loader != null)
-            {
-                this.loader = loader;
-            }
-            else
-            {
-                this.loader = DefaultLoader;
-            }
-        }
-        public void OnAssetRemove(AssetRemoveHandlerArgs args)
-        {
-            UnityEngine.GameObject.Destroy(args.asset);
-        }
-        public RouteBuilder SetDontDestroy(bool dontDestroy)
-        {
-            this.dontDestroy = dontDestroy;
-            return this;
-        }
-        public void SetNewAssetName(string name)
-        {
-            isDirty = viewName != name;
-            viewName = name;
-
-            if(isDirty)
-            {
-                if(Presenter != null && !Presenter.enable && Presenter.view != null)
-                {
-                    Presenter.Dispose();
-                    
-                    assetRemoveHandler(new AssetRemoveHandlerArgs{
-                        id = id,
-                        viewName = viewName,
-                        asset = Presenter.view.gameObject
-                    });
-                }
-                
-            }
-        }
-
-        //创建一个Ui 并触发生命周期初始化相关函数
-        //如果第一次创建 触发AssetLoaded
-        //如果未激活 触发 Init 不触发 ReInit
-        //如果已激活 触发 ReInit 不触发 Init
-        internal bool Build(object arg)
-        {
-            if (Presenter == null)
-            {
-                Presenter = System.Activator.CreateInstance(t) as BasePresenter;
-                Presenter.id = id;
-                if(!LoadAsset())
-                {
-                    return false;
-                }
-                
-            }
-            else if(isDirty)
-            {
-                if(Presenter.view != null)
-                {
-                    assetRemoveHandler(new AssetRemoveHandlerArgs{
-                        id = id,
-                        viewName = viewName,
-                        asset = Presenter.view.gameObject
-                    });
-                }
-                if(!LoadAsset())
-                {
-                    return false;
-                }
-            }
-
-            
-            if(Presenter.enable == false)
-                Presenter.Init(arg);
-            else
-                Presenter.ReInit(arg);
-
-            return true;
-            
-        }
-        private bool LoadAsset()
-        {
-            var go = loader(this.viewName);
-            if(go == null)
-            {
-                Presenter = null;
-                Debug.LogError($"StackUI:无法构建UI，因为无法加载资源，请检测对应的资源{this.viewName}");
-                return false;
-            }
-            Presenter.view = go.GetComponent<View>();
-            if(Presenter.view == null)
-            {
-                Presenter = null;
-                Debug.LogError($"StackUI:无法构建UI，因为{go}缺少View组件，请检测对应的资源{this.viewName}");
-                assetRemoveHandler(new AssetRemoveHandlerArgs{
-                        id = id,
-                        viewName = viewName,
-                        asset = go
-                    });
-                return false;
-            }
-            isDirty = false;
-            Presenter.AssetLoaded();
-            return true;
-        }
-
-
-        internal void Close(bool forceDestroy = false)
-        {
-            if(Presenter == null)
-            {
-                Debug.LogError("StackUI:Presenter实例不能为空");
-                return;
-            }
-            if (Presenter.enable)
-            {
-                try { Presenter.Close(); } catch(System.Exception e) {Debug.LogError(e);};
-            }
-            if (forceDestroy || !dontDestroy || isDirty)
-            {
-                Presenter.Dispose();
-                assetRemoveHandler(new AssetRemoveHandlerArgs{
-                        id = id,
-                        viewName = viewName,
-                        asset = Presenter.view.gameObject
-                    });
-                Presenter = null;
-            }
-
-        }
-        private static GameObject DefaultLoader(string viewName)
-        {
-            var prefab = Resources.Load<GameObject>(viewName);
-            if (prefab == null)
-            {
-                Debug.LogError("StackUI:找不到资源，请检查资源:" + viewName);
-                return null;
-            }
-            var go = GameObject.Instantiate(prefab);
-            return go;
-        }
-
     }
 
 }
