@@ -65,7 +65,7 @@ namespace StackUI
         public static async Task PushAsync<T>(object arg = emptyObj) where T:BasePresenter
         {
             System.Type t = typeof(T);
-            await PushAsync(t.Name,arg);
+            await PushAsync(GetID<T>(),arg);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace StackUI
         /// <param name="arg">页面参数</param>
         public static async Task PopAndPushAsync<T>(object arg = emptyObj) where T:BasePresenter
         {
-            await PopAndPushAsync(typeof(T).Name,arg);
+            await PopAndPushAsync(GetID<T>(),arg);
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace StackUI
         /// <param name="arg">页面参数</param>
         public static async Task PushAndRemoveAllAsync<T>(object arg = emptyObj) where T:BasePresenter
         {
-            await PushAndRemoveAllAsync(typeof(T).Name,arg);
+            await PushAndRemoveAllAsync(GetID<T>(),arg);
         }
 
 
@@ -247,7 +247,7 @@ namespace StackUI
         /// <param name="arg">页面参数</param>
         public static async Task PushAndRemoveUntilAsync<T>(System.Func<string, bool> until, object arg = emptyObj) where T:BasePresenter
         {
-            await PushAndRemoveUntilAsync(typeof(T).Name,until,arg);
+            await PushAndRemoveUntilAsync(GetID<T>(),until,arg);
         }
 
 
@@ -310,7 +310,7 @@ namespace StackUI
         /// <returns>窗口</returns>
         public static async Task<T> ShowWinAsync<T>(object arg = emptyObj) where T:BasePresenter
         {
-            return await ShowWinAsync(typeof(T).Name,arg) as T;
+            return await ShowWinAsync(GetID<T>(),arg) as T;
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace StackUI
         /// <returns>窗口</returns>
         public static async Task<T> ShowWinAsync<T>(bool ifExistDoReinit,object arg = emptyObj) where T:BasePresenter
         {
-            return await ShowWinAsync(typeof(T).Name,ifExistDoReinit,arg) as T;
+            return await ShowWinAsync(GetID<T>(),ifExistDoReinit,arg) as T;
         }
 
 

@@ -19,6 +19,11 @@ namespace StackUI
         private static Stack<RouteBuilder> uiLayer = new Stack<RouteBuilder>();
         private static Dictionary<string, RouteBuilder> winds = new Dictionary<string, RouteBuilder>();
 
+        public static string GetID<T>() where T:BasePresenter => IDManager.GetID<T>();
+        public static string GetID(Type t) => IDManager.GetID(t);
+
+        public static System.Type GetType(string id) => IDManager.GetType(id);
+
 
 
         /// <summary>
@@ -46,12 +51,12 @@ namespace StackUI
         /// </summary>
         /// <param name="id">页面ID</param>
         /// <param name="arg">页面参数</param>
-        public static void Push(string id, object arg = emptyObj)
+        public static BasePresenter Push(string id, object arg = emptyObj)
         {
             if (!table.ContainsKey(id))
             {
                 Debug.LogError("StackUI:没有注册页面:" + id);
-                return;
+                return null;
             }
             if (uiLayer.Count > 0)
             {
@@ -63,7 +68,9 @@ namespace StackUI
             if(!cur.Build(arg))
             {
                 uiLayer.Pop();
+                return null;
             }
+            return cur.Presenter;
         }
         
 
@@ -72,10 +79,10 @@ namespace StackUI
         /// </summary>
         /// <param name="arg">页面参数</param>
         /// <typeparam name="T">页面类型</typeparam>
-        public static void Push<T>(object arg = emptyObj) where T:BasePresenter
+        public static T Push<T>(object arg = emptyObj) where T:BasePresenter
         {
-            System.Type t = typeof(T);
-            Push(t.Name,arg);
+            return Push(GetID<T>(),arg) as T;
+
         }
         
 
@@ -146,12 +153,13 @@ namespace StackUI
         /// </summary>
         /// <param name="id">页面ID</param>
         /// <param name="arg">页面参数</param>
-        public static void PopAndPush(string id, object arg = emptyObj)
+        /// <returns>新页面实例</returns>
+        public static BasePresenter PopAndPush(string id, object arg = emptyObj)
         {
             if (!table.ContainsKey(id))
             {
                 Debug.LogError("StackUI:没有注册页面:" + id);
-                return;
+                return null;
             }
             if (uiLayer.Count > 0)
             {
@@ -161,6 +169,7 @@ namespace StackUI
             var cur = table[id];
             uiLayer.Push(cur);
             cur.Build(arg);
+            return cur.Presenter;
         }
 
         
@@ -172,9 +181,10 @@ namespace StackUI
         /// </summary>
         /// <typeparam name="T">页面类型</typeparam>
         /// <param name="arg">页面参数</param>
-        public static void PopAndPush<T>(object arg = emptyObj) where T:BasePresenter
+        /// <returns>新页面实例</returns>
+        public static T PopAndPush<T>(object arg = emptyObj) where T:BasePresenter
         {
-            PopAndPush(typeof(T).Name,arg);
+            return PopAndPush(GetID<T>(),arg) as T;
         }
 
         
@@ -184,10 +194,11 @@ namespace StackUI
         /// </summary>
         /// <param name="id">页面ID</param>
         /// <param name="arg">页面参数</param>
-        public static void PushAndRemoveAll(string id, object arg = emptyObj)
+        /// <returns>新页面实例</returns>
+        public static BasePresenter PushAndRemoveAll(string id, object arg = emptyObj)
         {
             Clear();
-            Push(id, arg);
+            return Push(id, arg);
 
         }
 
@@ -198,9 +209,10 @@ namespace StackUI
         /// </summary>
         /// <typeparam name="T">页面类型</typeparam>
         /// <param name="arg">页面参数</param>
-        public static void PushAndRemoveAll<T>(object arg = emptyObj) where T:BasePresenter
+        /// <returns>新页面实例</returns>
+        public static T PushAndRemoveAll<T>(object arg = emptyObj) where T:BasePresenter
         {
-            PushAndRemoveAll(typeof(T).Name,arg);
+            return PushAndRemoveAll(GetID<T>(),arg) as T;
         }
 
         
@@ -213,19 +225,20 @@ namespace StackUI
         /// <param name="id">页面ID</param>
         /// <param name="until">返回真时，不再移除. 若空则生命也不会发生</param>
         /// <param name="arg">页面参数</param>
-        public static void PushAndRemoveUntil(string id, System.Func<string, bool> until, object arg = emptyObj)
+        /// <returns>新页面实例</returns>
+        public static BasePresenter PushAndRemoveUntil(string id, System.Func<string, bool> until, object arg = emptyObj)
         {
             if (!table.ContainsKey(id))
             {
                 Debug.LogError("StackUI:没有注册页面:" + id);
-                return;
+                return null;
             }
             if(until == null)
-                return;
+                return CurrentInstance();
 
             if(CurrentInstanceID() == id)
             {
-                return;
+                return CurrentInstance();
             }
 
             int count = uiLayer.Count;
@@ -239,7 +252,7 @@ namespace StackUI
                     var cur = table[id];
                     uiLayer.Push(table[id]);
                     cur.Build(arg);
-                    return;
+                    return cur.Presenter;
                 }
                 else
                 {
@@ -252,10 +265,12 @@ namespace StackUI
                 var cur = table[id];
                 uiLayer.Push(table[id]);
                 cur.Build(arg);
+                return cur.Presenter;
             }
             else
             {
                 Debug.LogError("StackUI:操作失败：条件似乎永远都不会返回真");
+                return null;
             }
 
         }
@@ -269,9 +284,10 @@ namespace StackUI
         /// <typeparam name="T">页面类型</typeparam>
         /// <param name="until">返回真时，不再移除</param>
         /// <param name="arg">页面参数</param>
-        public static void PushAndRemoveUntil<T>(System.Func<string, bool> until, object arg = emptyObj) where T:BasePresenter
+        /// <returns>新页面实例</returns>
+        public static T PushAndRemoveUntil<T>(System.Func<string, bool> until, object arg = emptyObj) where T:BasePresenter
         {
-            PushAndRemoveUntil(typeof(T).Name,until,arg);
+            return PushAndRemoveUntil(GetID<T>(),until,arg) as T;
         }
 
         
@@ -327,7 +343,7 @@ namespace StackUI
         /// <typeparam name="T">页面类型</typeparam>
         public static void SetDontDestroyAsset<T>(bool dontDestroy) where T:BasePresenter
         {
-            SetDontDestroyAsset(typeof(T).Name,dontDestroy);
+            SetDontDestroyAsset(GetID<T>(),dontDestroy);
         }
 
 
@@ -360,7 +376,7 @@ namespace StackUI
         /// <typeparam name="T">页面类型</typeparam>
         public static void SetAssetName<T>(string newName) where T:BasePresenter
         {
-            SetAssetName(typeof(T).Name,newName);
+            SetAssetName(GetID<T>(),newName);
         }
 
 
@@ -387,7 +403,7 @@ namespace StackUI
         /// <param name="id">页面/窗口 id</param>
         public static string GetAssetName<T>() where T:BasePresenter
         {
-            return GetAssetName(typeof(T).Name);
+            return GetAssetName(GetID<T>());
         }
 
         /// <summary>
@@ -413,11 +429,11 @@ namespace StackUI
          /// <para>不适用于窗口</para>
         /// <para> 使用场景举例：埋点系统获取当前页面 id，用于 统计停留时长统计 </para>
         /// </summary>
-        public static bool IsCurrent<T>()
+        public static bool IsCurrent<T>() where T:BasePresenter
         {
             if(uiLayer.Count == 0)
                 return false;
-            return uiLayer.Peek().Presenter.id == typeof(T).Name;
+            return uiLayer.Peek().Presenter.id == GetID<T>();
         }
 
         /// <summary>
@@ -451,7 +467,7 @@ namespace StackUI
             }
 
             var builder = table[id];
-            if(builder.Build(arg))
+            if(!builder.Build(arg))
             {
                 return null;
             }
@@ -470,7 +486,7 @@ namespace StackUI
         /// <returns>窗口</returns>
         public static T ShowWin<T>(object arg = emptyObj) where T:BasePresenter
         {
-            return ShowWin(typeof(T).Name,arg) as T;
+            return ShowWin(GetID<T>(),arg) as T;
         }
 
         
@@ -514,7 +530,7 @@ namespace StackUI
         /// <returns>窗口</returns>
         public static T ShowWin<T>(bool ifExistDoReinit,object arg = emptyObj) where T:BasePresenter
         {
-            return ShowWin(typeof(T).Name,ifExistDoReinit,arg) as T;
+            return ShowWin(GetID<T>(),ifExistDoReinit,arg) as T;
         }
 
 
@@ -547,7 +563,7 @@ namespace StackUI
         /// <typeparam name="T">窗口类型</typeparam>
         public static void HideWin<T>(bool destroyAsset = false) where T:BasePresenter
         {
-            HideWin(typeof(T).Name,destroyAsset);
+            HideWin(GetID<T>(),destroyAsset);
         }
 
         /// <summary>
@@ -564,7 +580,7 @@ namespace StackUI
         /// <param name="id">窗口 ID</param>
         public static bool ExistWin<T>() where T:BasePresenter
         {
-            return ExistWin(typeof(T).Name);
+            return ExistWin(GetID<T>());
         }
 
         /// <summary>
@@ -580,7 +596,7 @@ namespace StackUI
         /// </summary>
         public static T GetWin<T>() where T:BasePresenter
         {
-            string id = typeof(T).Name;
+            string id = GetID<T>();
             return ExistWin(id) ? winds[id].Presenter as T : null;
         }
 

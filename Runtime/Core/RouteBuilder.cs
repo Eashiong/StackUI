@@ -57,12 +57,12 @@ namespace StackUI
         /// <param name="t">页面class type</param>
         /// <param name="viewName">页面名、资源名</param>
         /// <param name="builder">物体创建器</param>
-        internal RouteBuilder(  System.Type t, 
+        internal RouteBuilder( System.Type t, 
                                 string viewName, 
                                 Func<string, Task<GameObject>> loaderAsync = null,
                                 Func<AssetRemoveHandlerArgs,Task> assetRemoveHandlerAsync = null)
         {
-            id = t.Name;
+            id = IDManager.Register(t);
             this.viewName = viewName;
             this.t = t;
             this.dontDestroy = true;
@@ -71,12 +71,14 @@ namespace StackUI
             
         }
 
+
+
         /// <param name="t">页面class type</param>
         /// <param name="viewName">页面名、资源名</param>
         /// <param name="builder">物体创建器</param>
         internal RouteBuilder(System.Type t, string viewName, Func<string, GameObject> loader = null,Action<AssetRemoveHandlerArgs> assetRemoveHandler = null)
         {
-            id = t.Name;
+            id = IDManager.Register(t);
             this.viewName = viewName;
             this.t = t;
             this.dontDestroy = true;

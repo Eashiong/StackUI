@@ -23,7 +23,7 @@ namespace StackUI.Demo.Base
 
 
             //第一个页面
-            Navigation.Push("SimplePresenter");
+            Navigation.Push<SimplePresenter>();
         }
 
 

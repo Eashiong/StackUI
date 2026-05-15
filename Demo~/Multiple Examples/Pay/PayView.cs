@@ -17,7 +17,7 @@ namespace StackUI.Demo.MultipleExamples
         {
             ListenUnity(view.homeBtn.onClick, () =>
             {
-                Navigation.PopUntil(id => id == nameof(HomePresenter));
+                Navigation.PopUntil(id => id ==Navigation.GetID<HomePresenter>());
                 
             });
         }
